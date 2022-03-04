@@ -1,25 +1,40 @@
-# sgcn <- read.csv("sgcn_freqtab.csv", stringsAsFactors = FALSE)
-# sgcn <- sgcn[which(!is.na(sgcn$COUNT_Ecological_System___NEW)),]
-# sgcn$ï..OID_ <- NULL
-# sgcn$COUNT_Ecological_System___NEW <- NULL
-
-# or 
 library(tidyverse)
 library(arcgisbinding)
 arc.check_product()
 
-sgcn <- arc.open("D:/HabitatMapAssociations/HabitatMapAssociations.gdb/allSGCNuse_Point1")
-sgcn <- arc.select(sgcn)
 
-sgcn <- sgcn[which(!is.na(sgcn$Ecological_System___NEW)),]
+flag_datatype <- "area" # "point"
 
-sgcn1 <- sgcn[c("ELSeason", "Ecological_System___NEW")]
-sgcn1$pres <- 1
+# get SGCN data
+lu_sgcn <- arc.open("D:/COA_Tools/_data/output/_update2021q4/SGCN.gdb/allSGCNuse")
+lu_sgcn <- arc.select(lu_sgcn, fields = c("SNAME", "ELSeason"))
+lu_sgcn <- unique(lu_sgcn)
 
-colnames(sgcn1)[2] <- "Habitat"
 
-sgcn1 <- sgcn1[c("Habitat","ELSeason","pres" )]
-sgcn_wide <- sgcn1 %>% pivot_wider(names_from = ELSeason, values_from=pres, values_fn = sum)
+# load SGCN data in
+if(flag_datatype=="point"){
+  sgcn <- arc.open("D:/HabitatMapAssociations/HabitatMapAssociations.gdb/allSGCNuse_Point1")
+  sgcn <- arc.select(sgcn)
+  sgcn <- sgcn[which(!is.na(sgcn$Ecological_System___NEW)),]
+  sgcn1 <- sgcn[c("ELSeason", "Ecological_System___NEW")]
+  sgcn1$pres <- 1
+  colnames(sgcn1)[2] <- "Habitat"
+  sgcn1 <- sgcn1[c("Habitat","ELSeason","pres" )]
+  sgcn_wide <- sgcn1 %>% pivot_wider(names_from = ELSeason, values_from=pres, values_fn=sum)
+} else if(flag_datatype=="area"){
+  sgcn <- arc.open("D:/HabitatMapAssociations/HabitatMapAssociations.gdb/Tabulat_allSGCN1")
+  sgcn <- arc.select(sgcn)
+  sgcn <- sgcn[which(!is.na(sgcn$Ecological_System___NEW)),]
+  sgcn1 <- sgcn[c("ELSeason", "Ecological_System___NEW", "Count")] # can use area if we wanted, didn't to 
+  colnames(sgcn1)[2] <- "Habitat"
+  sgcn1 <- sgcn1[c("Habitat","ELSeason","Count" )]
+  sgcn1 <- sgcn1[which(sgcn1$Habitat!="Developed"),]
+  sgcn_wide <- sgcn1 %>% pivot_wider(names_from = ELSeason, values_from=Count, values_fn=sum)
+} else {
+  cat("not a valid entry")
+}  
+
+# further processing on the wide version
 sgcn_wide[is.na(sgcn_wide)] <- 0 # convert NA to 0's
 sgcn_wide$hab <- 1:nrow(sgcn_wide)
 habitats <- sgcn_wide[c("Habitat","hab")]
@@ -36,20 +51,12 @@ res <-
 
 res_indval <- res$indval
 
-# replace column names
-lu_sgcn <- unique(sgcn[c("ELSeason","SNAME")]) # make a lookup table
-
-lu_sgcn$ELSeason
-
-
-
-
 res_indval <- res_indval %>% rename_at(vars(names(res_indval)), ~habitats$Habitat)
 res_indval$ELSeason <- row.names(res_indval)
 
 res_indval1 <- merge(res_indval, lu_sgcn, by="ELSeason")
 
-write.csv(res_indval1, "res_indval1.csv")
+write.csv(res_indval1, "res_indval_area.csv")
 
 # 
 # sgcnkm = kmeans(sgcn_wide, centers=44)
