@@ -1,0 +1,106 @@
+%This knitr document is called by the knit2pdf ....
+\documentclass{article}
+\usepackage[utf8]{inputenc} %\UseRawInputEncoding
+\usepackage{fontspec}
+\setmainfont{Gill Sans MT}
+\pdfmapfile{=pdftex35.map} %I think this fixes some MikTex font reading issues
+\usepackage[margin=10pt,font=small]{caption}
+%\usepackage{afterpage}
+\usepackage{geometry}
+\usepackage{longtable,booktabs,threeparttablex, array}
+\newcolumntype{C}[1]{>{\centering\arraybackslash}p{#1}}
+\usepackage{xcolor}
+%\usepackage[table]{xcolor}
+\usepackage{float}
+\usepackage{wrapfig}
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{url}
+\urlstyle{same}
+\usepackage{needspace}
+%\usepackage{siunitx}
+\usepackage{graphicx}
+\graphicspath{ {data/output/}{figuresReporting} }
+\usepackage[style=authoryear,hyperref=false]{biblatex}
+\addbibresource{../../citations/PNHP_refs.bib}
+% \usepackage{cite}
+\usepackage{enumitem}
+\setlist{nolistsep}
+\usepackage{fancyhdr} %for headers,footers
+% \usepackage{float}
+\usepackage{hyperref}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=black,
+    filecolor=magenta,      
+    urlcolor=blue,
+}
+\usepackage{lastpage}
+
+
+\geometry{letterpaper, top=0.45in, bottom=0.75in, left=0.75in, right=0.75in}
+\pagestyle{fancy} \fancyhf{} \renewcommand\headrulewidth{0pt} %strip default header/footer stuff
+
+\setlength\intextsep{0pt}
+
+% %add footers
+ \lfoot{
+  \small   %small font. The double slashes is newline in fancyhdr
+  \textcolor{gray}{\leftmark \\ Pennsylvania SWAP Species Habitat Associations } }
+ \rfoot{
+  \small  
+  \textcolor{gray}{page \thepage }
+ }
+
+%\pagenumbering{roman} % Start roman numbering
+
+\begin{document}
+%\RaggedRight
+\catcode`\_=11
+
+\begin{center}
+  \Large \textbf{Pennsylvania SWAP Species Habitat Associations} \\
+  \large Pennsylvania Natural Heritage Program \\
+\end{center}
+
+
+\section*{Overview}
+
+A bunch of stuff about the methods will go here....
+
+\section*{Species Associations}
+
+% \subsection*{Data by Taxonomic Groups}
+% \noindent The following is an overview of each major taxonomic group of SGCN that presents current SGCN data relative to the 25-year cutoff for most taxonomic groups---data beyond this 25-year window is not included in the tool (exception for fish, which go back to 1980).  Histograms and maps showing these are presented below. Note that the data presented as of the \Sexpr{updatetracker[which(updatetracker$updateName==updateName),"UpdateNameDisplay"]} update (i.e. previous data is not shown. %Due to size and scale limitations of the maps, we recommend that any detailed analysis of the spatial data be undertaken by using the spatial data provided to PFBC and PGC.  When known, we’ve provided additional details, data harvesting, and survey needs to fill in data gaps. Some of this data gathering (e.g., field surveys) are beyond the scope of this project, but could be supported by additional funding (e.g., State Wildlife Grants, Wild Resources Conservation Program, PA Department of Agriculture).\\
+% \medskip
+
+\newpage
+<<label=taxamaps, echo=FALSE, results='asis'>>=
+for(i in 1:40) { # length(elseason_vector)
+  cat(paste("\\section*{",lu_sgcn[which(lu_sgcn$ELSeason==elseason_vector[i]),]$SCOMNAME," (\\textit{",lu_sgcn[which(lu_sgcn$ELSeason==elseason_vector[i]),]$SNAME,"})}", sep=""))
+  #cat(paste("\\Needspace{20\\baselineskip}"))
+  #cat("\\noindent", paste0("\\textbf{",specieslooper$taxalist[i],"}"), "--- ")
+  #spp <- paste0("species-", specieslooper$spabbv[i])
+  #cat(updatenotes[which(updatenotes$NoteType==spp&updatenotes$updateName==updateName), "NoteContent"])
+  cat(paste("\\underline{Season Code}: ",lu_sgcn[which(lu_sgcn$ELSeason==elseason_vector[i]),]$SeasonCode,"\\\\",sep=""))
+  cat(paste("\\underline{Taxa Group}: ",lu_sgcn[which(lu_sgcn$ELSeason==elseason_vector[i]),]$TaxaDisplay,"\\\\",sep=""))
+  cat("\\\\")
+  cat(paste("\\underline{2015 SWAP Specific Habitat Requirements}: ",lu_SpecificHabitatReq[which(lu_SpecificHabitatReq$ELSEASON==elseason_vector[i]),]$SpecificHabitatRequirements,"\\\\",sep=""))
+  cat(paste("\\underline{2015 SWAP Primary Macrogroup}: ",lu_PrimaryMacrogroup[which(lu_PrimaryMacrogroup$ELSeason==elseason_vector[i]),]$PrimMacro,"\\\\",sep=""))
+  cat("\\\\")
+  cat("\\textbf{Indicator Value Analysis}\\\\")
+  cat(paste("\\underline{Number of input polygons}:",indval_metrics[which(indval_metrics$ELSeason==elseason_vector[i]),]$grpcnt, "\\\\", sep=""))
+  cat(paste("\\underline{p-value}: ",indval_metrics[which(indval_metrics$ELSeason==elseason_vector[i]),]$pvalue, "\\\\", sep=""))
+  fig_indval <- paste0("habgraph_", elseason_vector[i],".png")
+  cat("\\begin{figure}[H]\\\\")
+  cat("\\centering")
+  cat(paste0("\\includegraphics[width=0.95\\textwidth]{",fig_indval,"}\\\\ ")) #
+  cat("\\end{figure}\\\\")
+  cat("\\newpage\\\\")
+}
+@
+
+
+\afterpage{\clearpage}
+
+\end{document}
